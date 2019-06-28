@@ -1,5 +1,6 @@
 package com.pwrd.dls.marble.moudle.timemap.map.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -9,6 +10,9 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import com.google.gson.JsonArray
+import com.mapbox.android.core.location.*
+import com.mapbox.android.core.permissions.PermissionsListener
+import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.android.gestures.StandardScaleGestureDetector
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
@@ -21,6 +25,11 @@ import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.geometry.LatLngBounds
 import com.mapbox.mapboxsdk.geometry.LatLngQuad
+import com.mapbox.mapboxsdk.location.LocationComponent
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
+import com.mapbox.mapboxsdk.location.LocationComponentOptions
+import com.mapbox.mapboxsdk.location.modes.CameraMode
+import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
@@ -40,6 +49,7 @@ import com.pwrd.dls.marble.moudle.timemap.map.helper.bean.MapPoint
 import com.pwrd.dls.marble.moudle.timemap.map.model.bean.Geometry
 import com.pwrd.dls.marble.moudle.timemap.map.model.bean.mapbox.FeatureBean
 import kotlinx.android.synthetic.main.test_activity.*
+import java.lang.Exception
 
 class MapTestActivity : BaseActivity() {
     private var csid=""
@@ -51,8 +61,46 @@ class MapTestActivity : BaseActivity() {
 
     override fun getTopbarID(): Int = 0
 
-    override fun initDatas(savedInstanceState: Bundle?) {
+    private lateinit var pm:PermissionsManager
+    private lateinit var engine:LocationEngine
+    private val callback=object :LocationEngineCallback<LocationEngineResult>{
+        override fun onSuccess(result: LocationEngineResult?) {
+            val p=LatLng(result!!.lastLocation!!.latitude,
+                    result.lastLocation!!.longitude)
+            log("ok-->$p")
+            mapboxMap?.easeCamera(CameraUpdateFactory.newLatLng(p),100)
+        }
 
+        override fun onFailure(exception: Exception) {
+            exception.printStackTrace()
+        }
+    }
+    @SuppressLint("MissingPermission")
+    override fun initDatas(savedInstanceState: Bundle?) {
+        engine=LocationEngineProvider.getBestLocationEngine(this)
+
+        engine.requestLocationUpdates(LocationEngineRequest.Builder(1000)
+                .setMaxWaitTime(2000)
+                .setPriority(LocationEngineRequest.PRIORITY_NO_POWER)
+                .build(),callback,mainLooper)
+        engine.getLastLocation(callback)
+        pm=PermissionsManager(object:PermissionsListener{
+            override fun onExplanationNeeded(permissionsToExplain: MutableList<String>?) {
+                permissionsToExplain?.forEachIndexed{index,it->
+                    log("explain $it")
+                }
+            }
+            override fun onPermissionResult(granted: Boolean) {
+                log("granted $granted")
+            }
+        })
+        pm.requestLocationPermissions(this)
+
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        //super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        pm.onRequestPermissionsResult(requestCode,permissions,grantResults)
     }
 
     override fun initViews(savedInstanceState: Bundle?) {
@@ -88,7 +136,7 @@ class MapTestActivity : BaseActivity() {
 
                 override fun onScale(detector: StandardScaleGestureDetector) {
                     scale*=detector.scaleFactor
-                    log(it.projection.calculateZoom(1f))
+                    //log(it.projection.calculateZoom(1f))
                     testL.setProperties(PropertyFactory.iconSize(scale))
                 }
             })
@@ -111,9 +159,9 @@ class MapTestActivity : BaseActivity() {
 
 
             /*mapView.postDelayed({
-                mapboxMap?.animateCamera(CameraUpdateFactory.newLatLng(LatLng(90.0, 90.0)), 3000)
-            }, 1000)
-            mapView.postDelayed({
+                mapboxMap?.animateCamera(CameraUpdateFactory.newLatLng(LatLng(29.0, 106.0)), 3000)
+            }, 1000)*/
+            /*mapView.postDelayed({
                 mapboxMap?.easeCamera(CameraUpdateFactory.newLatLng(LatLng(0.0, 0.0)), 3000)
             }, 5000)
             val position = CameraPosition.Builder()
@@ -180,10 +228,18 @@ class MapTestActivity : BaseActivity() {
                     )
                     style.addLayer(testL)
 
-                    style.layers.forEach {
-                        log("layer->" + it.id)
-                    }
+                    val lo=LocationComponentActivationOptions.builder(this@MapTestActivity,style)
+                            .useDefaultLocationEngine(true)
+                            .locationComponentOptions(LocationComponentOptions.builder(this@MapTestActivity)
+                                    .foregroundDrawable(R.drawable.position_marker)
+                                    .build())
+                            .build()
 
+                    val lc=mapboxMap!!.locationComponent
+                    lc.activateLocationComponent(lo)
+                    lc.isLocationComponentEnabled=true
+                    lc.cameraMode=CameraMode.TRACKING
+                    lc.renderMode=RenderMode.GPS
 
 
 
@@ -218,6 +274,7 @@ class MapTestActivity : BaseActivity() {
 
     override fun onStop() {
         super.onStop()
+        engine.removeLocationUpdates(callback)
         mapView.onStop()
     }
 
@@ -240,5 +297,7 @@ class MapTestActivity : BaseActivity() {
         fun actionStart(ctx: Context) {
             ctx.startActivity(Intent(ctx, MapTestActivity::class.java))
         }
+
     }
+
 }
