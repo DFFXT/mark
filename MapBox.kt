@@ -1,11 +1,13 @@
-package com.pwrd.dls.marble.moudle.timemap.map.ui
+﻿package com.pwrd.dls.marble.moudle.timemap.map.ui
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
@@ -41,6 +43,7 @@ import com.mapbox.mapboxsdk.style.sources.RasterSource
 import com.mapbox.mapboxsdk.style.sources.TileSet
 import com.pwrd.dls.marble.R
 import com.pwrd.dls.marble.common.base.BaseActivity
+import com.pwrd.dls.marble.common.base.BaseViewModel
 import com.pwrd.dls.marble.common.util.ResUtils
 import com.pwrd.dls.marble.mapbox.clustering.ClusterManager
 import com.pwrd.dls.marble.mapbox.clustering.Point
@@ -204,6 +207,10 @@ class MapTestActivity : BaseActivity() {
                     val geo=GeoJsonSource("geo", FeatureCollection.fromFeatures(arrayOf(makeFeature())))
                     style.addSource(rsts)
                     style.addSource(geo)
+                    mapView.postDelayed({
+                        log("gt1->"+geo.querySourceFeatures(Expression.gt(Expression.get("hh"),0)))
+                        log("gt1->"+geo.querySourceFeatures(Expression.gt(Expression.get("hh"),220)))
+                    },1000)
 
                     val circleLayer=CircleLayer("circleLayer","source")
 
@@ -229,7 +236,7 @@ class MapTestActivity : BaseActivity() {
                     style.addLayer(testL)
 
                     val lo=LocationComponentActivationOptions.builder(this@MapTestActivity,style)
-                            .useDefaultLocationEngine(true)
+                            .locationEngine(engine)
                             .locationComponentOptions(LocationComponentOptions.builder(this@MapTestActivity)
                                     .foregroundDrawable(R.drawable.position_marker)
                                     .build())
@@ -239,7 +246,7 @@ class MapTestActivity : BaseActivity() {
                     lc.activateLocationComponent(lo)
                     lc.isLocationComponentEnabled=true
                     lc.cameraMode=CameraMode.TRACKING
-                    lc.renderMode=RenderMode.GPS
+                    lc.renderMode=RenderMode.COMPASS
 
 
 
@@ -255,6 +262,7 @@ class MapTestActivity : BaseActivity() {
     private fun makeFeature():Feature{
         val f=Feature.fromGeometry(com.mapbox.geojson.Point.fromLngLat(0.0,0.0))
         f.addStringProperty("icon","xxx")
+        f.addNumberProperty("hh",100)
         val offset=JsonArray(2)
         offset.add(10f)
         offset.add(10f)
@@ -286,7 +294,10 @@ class MapTestActivity : BaseActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         mapView.onSaveInstanceState(outState)
+
     }
+
+
 
     companion object {
         fun log(any: Any?) {
