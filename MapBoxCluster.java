@@ -30,13 +30,17 @@ import java.net.URL;
 
 import timber.log.Timber;
 
+import static com.mapbox.mapboxsdk.style.expressions.Expression.all;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.division;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.exponential;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.has;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.interpolate;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.literal;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.lt;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.rgb;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.toNumber;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleRadius;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconColor;
@@ -184,6 +188,8 @@ public class DmapActivity extends Activity {
                         )
                 )
         );
+        Expression e=toNumber(get("point_count"));
+        unclustered.setFilter(all(lt(e,literal(2))));
         loadedMapStyle.addLayer(unclustered);
 
         for (int i = 0; i < layers.length; i++) {
@@ -191,7 +197,7 @@ public class DmapActivity extends Activity {
             CircleLayer circles = new CircleLayer("cluster-" + i, "earthquakes");
             circles.setProperties(
                     circleColor(layers[i][1]),
-                    circleRadius(18f)
+                    circleRadius(6f)
             );
 
             Expression pointCount = Expression.toNumber(get("point_count"));
