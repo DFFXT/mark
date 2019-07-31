@@ -1,0 +1,41 @@
+酷我m
+搜索
+http://search.kuwo.cn/r.s?all={keyword}&ft=music&client=kt&cluster=0&pn={page}&rn={pageAccount}&rformat=json&encoding=utf8&r={time}
+
+
+根据搜索结果的Tag 获取下载地址(似乎无法下载)
+http://suggestion.baidu.com/su?wd={http://218.27.102.25/mp3/beyond/293275239.wma}&action=opensearch&ie=UTF-8
+根据 音乐RID直接下载
+http://antiserver.kuwo.cn/anti.s?format=aac|mp3&rid={MUSIC_46861193}&type=convert_url&response=res
+
+根据搜索结果的RID（不包含MUSIC_,只包含数字）获取歌手图片地址后缀
+http://mobile.kuwo.cn/mpage/html5/songinfoandlrc?mid=116964
+
+根据图片后缀得到图片真实地址
+http://img1.kwcdn.kuwo.cn/star/albumcover/{120/91/52/3485358510.jpg}
+
+根据mid获取歌曲信息（包括歌词，歌词格式为json格式， 包括歌手图片信息）
+http://m.kuwo.cn/newh5/singles/songinfoandlrc?musicId=116964
+
+
+
+酷狗m
+搜索（结果包含括号）
+http://mobilecdn.kugou.com/api/v3/search/song?format=jsonp&keyword=落雪祭&page=1&pagesize=30&showtype=1
+
+
+根据hash获取下载地址
+http://m.kugou.com/api/v1/song/get_song_info?cmd=playInfo&hash={0347BB1BDF209AD277ADAD40D85C6F03}&from=mkugou&apiver=2&mid=ab58a3c2f29839e88ec74cf8684d4fef&userid=0&platid=5&dfid=null
+
+根据hash获取歌手头像地址
+http://tools.mobile.kugou.com/api/v1/singer_header/get_by_hash?hash=4359020862755B4729B50FEB89E6C7F6&size=200&format=jsonp
+
+根据关键字和hash获取歌词
+http://m.kugou.com/app/i/krc.php?cmd=100&keyword=%E5%AD%99%E6%A5%A0%E3%80%81%E9%9F%A9%E7%BA%A2%20-%20%E7%BE%8E%E4%B8%BD%E7%9A%84%E7%A5%9E%E8%AF%9D&hash=4359020862755B4729B50FEB89E6C7F6&timelength=292000&d=0.35586053111535465
+
+
+
+
+
+
+
