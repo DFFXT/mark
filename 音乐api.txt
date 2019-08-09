@@ -1,10 +1,13 @@
 酷我m
 搜索
 http://search.kuwo.cn/r.s?all={keyword}&ft=music&client=kt&cluster=0&pn={page}&rn={pageAccount}&rformat=json&encoding=utf8&r={time}
+http://www.kuwo.cn/api/www/search/searchMusicBykeyWord?key=%E8%90%BD%E9%9B%AA%E7%A5%AD&pn=1&rn=30&reqId=1a51ba20-b375-11e9-b627-031247e03c9f
 
 
 根据搜索结果的Tag 获取下载地址(似乎无法下载)
 http://suggestion.baidu.com/su?wd={http://218.27.102.25/mp3/beyond/293275239.wma}&action=opensearch&ie=UTF-8
+
+http://www.kuwo.cn/url?format=mp3&rid=46861193&response=url&type=convert_url3&br=128kmp3&from=web&t=1564648018451&reqId=20e3e270-b436-11e9-b627-031247e03c9f
 根据 音乐RID直接下载
 http://antiserver.kuwo.cn/anti.s?format=aac|mp3&rid={MUSIC_46861193}&type=convert_url&response=res
 
@@ -22,17 +25,47 @@ http://m.kuwo.cn/newh5/singles/songinfoandlrc?musicId=116964
 酷狗m
 搜索（结果包含括号）
 http://mobilecdn.kugou.com/api/v3/search/song?format=jsonp&keyword=落雪祭&page=1&pagesize=30&showtype=1
-
+（不包含括号）
+https://songsearch.kugou.com/song_search_v2?keyword={落雪祭}&page=1&pagesize=30&userid=-1&clientver=&platform=WebFilter&tag=em&filter=2&iscorrection=1&privilege_filter=0&_=1564642814002
 
 根据hash获取下载地址
 http://m.kugou.com/api/v1/song/get_song_info?cmd=playInfo&hash={0347BB1BDF209AD277ADAD40D85C6F03}&from=mkugou&apiver=2&mid=ab58a3c2f29839e88ec74cf8684d4fef&userid=0&platid=5&dfid=null
+
 
 根据hash获取歌手头像地址
 http://tools.mobile.kugou.com/api/v1/singer_header/get_by_hash?hash=4359020862755B4729B50FEB89E6C7F6&size=200&format=jsonp
 
 根据关键字和hash获取歌词
 http://m.kugou.com/app/i/krc.php?cmd=100&keyword=%E5%AD%99%E6%A5%A0%E3%80%81%E9%9F%A9%E7%BA%A2%20-%20%E7%BE%8E%E4%B8%BD%E7%9A%84%E7%A5%9E%E8%AF%9D&hash=4359020862755B4729B50FEB89E6C7F6&timelength=292000&d=0.35586053111535465
+(歌词、图片)
+https://wwwapi.kugou.com/yy/index.php?r=play/getdata&hash=52AC5D5E07CB7C3CFC76EE9A292B94C6
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+QQ
+搜索
+https://c.y.qq.com/soso/fcgi-bin/client_search_cp?ct=24&qqmusic_ver=1298&new_json=1&remoteplace=txt.yqq.center&t=0&aggr=1&cr=1&catZhida=1&lossless=0&flag_qc=0&p={page}&n={pageSize}&w={神话}&g_tk=5381&loginUin=0&hostUin=0&format=json&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq.json&needNewCode=0
+
+根据搜索结果的id获取歌词（需要添加Referer: https://y.qq.com/n/yqq/song/000ahpJ01WjZSb.html）
+https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_yqq.fcg?nobase64=1&musicid=121558005&-=jsonp1&g_tk=5381&loginUin=0&hostUin=0&format=json&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq.json&needNewCode=0
+
+
+vkey和歌曲地址
+https://u.y.qq.com/cgi-bin/musicu.fcg?-=getplaysongvkey7147489900794954&g_tk=5381&loginUin=0&hostUin=0&format=json&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq.json&needNewCode=0&data={"req":{"module":"CDN.SrfCdnDispatchServer","method":"GetCdnDispatch","param":{"guid":"344942144","calltype":0,"userip":""}},"req_0":{"module":"vkey.GetVkeyServer","method":"CgiGetVkey","param":{"guid":"344942144","songmid":["000ahpJ01WjZSb"],"songtype":[0],"uin":"0","loginflag":1,"platform":"20"}},"comm":{"uin":0,"format":"json","ct":24,"cv":0}}
+歌曲地址格式 http://183.60.131.112/amobile.music.tc.qq.com + 通过上一步获取的地址后半部分
+http://183.60.131.112/amobile.music.tc.qq.com/C400001JZ4kP0w9g5Y.m4a?guid=344942144&vkey=E690631B56E9E094769B4192D7DCE6C7CB64C2E18573BD1C1BC8C035EB39D523D4A8AABD48441DC078431B66CCFC854B2802D4EE11BF1175&uin=0&fromtag=66
 
 
 
