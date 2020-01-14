@@ -2,16 +2,20 @@ package com.pwrd.dls.marble.moudle.monument.monumentGuide.adapter
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.pwrd.dls.marble.common.view.getMarginEnd
+import com.pwrd.dls.marble.common.view.getMarginStart
 
 /**
  * 使用LayoutManager支持无限滑动
- * 由于没有重载其他重要方法，这个只能靠手滑动，如果调用scrollTo等方法会出现蜜汁bug
- * 由于onLayoutChildren没有暂时考虑margin 所以item如果有margin 会有bug
+ * 由于没有重载其他重要方法，这个只能靠手滑动，如果调用scrollToPosition等方法会出现奇怪bug
  */
-class InfiniteLayoutManager/*(private val orientaion:Int= VERTICAL)*/ : LinearLayoutManager {
+class InfiniteLayoutManager : LinearLayoutManager {
 
+
+    //todo 更改回收View的时机和onLayoutChildren的规则可实现预加载item
 
     constructor(ctx: Context) : super(ctx)
     constructor(ctx: Context, orientation: Int, reverse: Boolean) : super(ctx, orientation, reverse)
@@ -26,7 +30,7 @@ class InfiniteLayoutManager/*(private val orientaion:Int= VERTICAL)*/ : LinearLa
         offsetChildrenVertical(-y)//**应用滑动
         for (c in 0 until childCount) {
             val v = getChildAt(c) ?: continue
-            if (v.bottom <= 0 || v.top >= height) {
+            if (getDecoratedBottom(v) <= 0 || getDecoratedTop(v) >= height) {
                 removeAndRecycleView(v, recycler)
             }
         }
@@ -40,7 +44,7 @@ class InfiniteLayoutManager/*(private val orientaion:Int= VERTICAL)*/ : LinearLa
         offsetChildrenHorizontal(-x)
         for (c in 0 until childCount) {
             val v = getChildAt(c) ?: continue
-            if (v.right <= 0 || v.left >= height) {
+            if (getDecoratedRight(v) <= 0 || getDecoratedLeft(v) >= width) {
                 removeAndRecycleView(v, recycler)
             }
         }
@@ -51,10 +55,11 @@ class InfiniteLayoutManager/*(private val orientaion:Int= VERTICAL)*/ : LinearLa
      * 根据滑动距离来填充View
      */
     private fun fillVertical(dy: Int, recycler: RecyclerView.Recycler, state: RecyclerView.State): Int {
+        if (itemCount == 0 || itemCount == 1) return 0
         if (dy > 0) {//up
             val child = getChildAt(childCount - 1) ?: return 0
-            if (child.bottom - dy < height) {//**需要进行填充
-                var bottom = child.bottom
+            if (getDecoratedBottom(child) - dy < height) {//**需要进行填充
+                var bottom = getDecoratedBottom(child)
                 var p = getPosition(child)
                 while (bottom - dy < height) {//**如果是快速滑动、有可能填充一个View还不够，所以要一直填充知道填充满
                     if (p == itemCount - 1) p = -1
@@ -62,26 +67,28 @@ class InfiniteLayoutManager/*(private val orientaion:Int= VERTICAL)*/ : LinearLa
                     val itemView = recycler.getViewForPosition(p)
                     addView(itemView)
                     measureChildWithMargins(itemView, 0, 0)//测量View，包括margin值
-                    val h = getDecoratedMeasuredHeight(itemView)
-                    val w = getDecoratedMeasuredWidth(itemView)
-                    layoutDecorated(itemView, 0, bottom, w, bottom + h)
+                    val lp = itemView.layoutParams as ViewGroup.MarginLayoutParams
+                    val h = getDecoratedMeasuredHeight(itemView) + lp.topMargin + lp.bottomMargin
+                    val w = getDecoratedMeasuredWidth(itemView) + lp.marginStart + lp.marginEnd
+                    layoutDecoratedWithMargins(itemView, paddingStart, bottom, w + paddingStart, bottom + h)
                     bottom += h
                 }
             }
         } else {//down
             val child = getChildAt(0) ?: return 0
-            if (child.top - dy > 0) {
+            if (getDecoratedTop(child) - dy > 0) {
                 var p = getPosition(child)
-                var top = child.top
+                var top = getDecoratedTop(child)
                 while (top - dy >= 0) {
                     if (p == 0) p = itemCount
                     p -= 1
                     val itemView = recycler.getViewForPosition(p)
                     addView(itemView, 0)//插入为第一个
                     measureChildWithMargins(itemView, 0, 0)
-                    val h = getDecoratedMeasuredHeight(itemView)
-                    val w = getDecoratedMeasuredWidth(itemView)
-                    layoutDecorated(itemView, 0, top - h, w, top)
+                    val lp = itemView.layoutParams as ViewGroup.MarginLayoutParams
+                    val h = getDecoratedMeasuredHeight(itemView) + lp.topMargin + lp.bottomMargin
+                    val w = getDecoratedMeasuredWidth(itemView) + lp.marginStart + lp.marginEnd
+                    layoutDecoratedWithMargins(itemView, paddingStart, top - h, w + paddingStart, top)
                     top -= h
                 }
             }
@@ -89,39 +96,42 @@ class InfiniteLayoutManager/*(private val orientaion:Int= VERTICAL)*/ : LinearLa
         return dy
     }
 
+
     private fun fillHorizontal(dx: Int, recycler: RecyclerView.Recycler, state: RecyclerView.State): Int {
+        if (itemCount == 0 || itemCount == 1) return 0
         if (dx > 0) {//left
             val child = getChildAt(childCount - 1) ?: return 0
-            if (child.right - dx < width) {//**需要进行填充
-                var right = child.right
+            var right = getDecoratedRight(child) + child.getMarginEnd()
+            if (right - dx < width) {//**需要进行填充
                 var p = getPosition(child)
-
                 while (right - dx < width) {//**如果是快速滑动、有可能填充一个View还不够，所以要一直填充知道填充满
                     if (p == itemCount - 1) p = -1
                     p += 1
                     val itemView = recycler.getViewForPosition(p)
                     addView(itemView)
                     measureChildWithMargins(itemView, 0, 0)//测量View，包括margin值
-                    val h = getDecoratedMeasuredHeight(itemView)
-                    val w = getDecoratedMeasuredWidth(itemView)
-                    layoutDecorated(itemView, right, 0, right + w, h)
+                    val lp = itemView.layoutParams as ViewGroup.MarginLayoutParams
+                    val h = getDecoratedMeasuredHeight(itemView) + lp.topMargin + lp.bottomMargin
+                    val w = getDecoratedMeasuredWidth(itemView) + lp.marginStart + lp.marginEnd
+                    layoutDecoratedWithMargins(itemView, right, paddingTop, right + w, h + paddingTop)
                     right += w
                 }
             }
         } else {//right
             val child = getChildAt(0) ?: return 0
-            if (child.left - dx > 0) {
+            if (getDecoratedLeft(child) - dx > 0) {
                 var p = getPosition(child)
-                var left = child.left
+                var left = getDecoratedLeft(child) + child.getMarginStart()
                 while (left - dx >= 0) {
                     if (p == 0) p = itemCount
                     p -= 1
                     val itemView = recycler.getViewForPosition(p)
                     addView(itemView, 0)//插入为第一个
                     measureChildWithMargins(itemView, 0, 0)
-                    val h = getDecoratedMeasuredHeight(itemView)
-                    val w = getDecoratedMeasuredWidth(itemView)
-                    layoutDecorated(itemView, left - w, 0, left, h)
+                    val lp = itemView.layoutParams as ViewGroup.MarginLayoutParams
+                    val h = getDecoratedMeasuredHeight(itemView) + lp.topMargin + lp.bottomMargin
+                    val w = getDecoratedMeasuredWidth(itemView) + lp.marginStart + lp.marginEnd
+                    layoutDecoratedWithMargins(itemView, left - w, paddingTop, left, h + paddingTop)
                     left -= w
                 }
             }
@@ -135,7 +145,10 @@ class InfiniteLayoutManager/*(private val orientaion:Int= VERTICAL)*/ : LinearLa
      * item 初次加载时会requestLayout ，所以会多次调用改方法
      */
     override fun onLayoutChildren(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
-        if (itemCount == 0 || state.isPreLayout) return
+        if (itemCount == 0) {
+            detachAndScrapAttachedViews(recycler)
+            return
+        } else if (state.isPreLayout) return
         if (orientation == VERTICAL) {
             verticalLayout(recycler, state)
         } else {
@@ -144,18 +157,22 @@ class InfiniteLayoutManager/*(private val orientaion:Int= VERTICAL)*/ : LinearLa
     }
 
     private fun verticalLayout(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
-
+        //如果存在已经有的layout ，继承
         val fp = findFirstVisibleItemPosition()
         var i = (if (fp == RecyclerView.NO_POSITION) 0 else fp) % itemCount
-        var totalHeight = getChildAt(0)?.top ?: 0
+        val firstView = getChildAt(0)
+        var totalHeight = if (firstView == null) paddingTop else getDecoratedTop(firstView)
+
         detachAndScrapAttachedViews(recycler)
+        if (itemCount == 0) return
         while (true) {//**由于是无限滑动，所以这里是填充满
             val itemView = recycler.getViewForPosition(i)
             addView(itemView)
             measureChildWithMargins(itemView, 0, 0)
-            val h = getDecoratedMeasuredHeight(itemView)
-            val w = getDecoratedMeasuredWidth(itemView)
-            layoutDecorated(itemView, 0, totalHeight, w, totalHeight + h)
+            val lp = itemView.layoutParams as ViewGroup.MarginLayoutParams
+            val h = getDecoratedMeasuredHeight(itemView) + lp.topMargin + lp.bottomMargin
+            val w = getDecoratedMeasuredWidth(itemView) + lp.marginStart + lp.marginEnd
+            layoutDecoratedWithMargins(itemView, 0 + paddingStart, totalHeight + paddingTop, w + paddingStart, totalHeight + h)
             totalHeight += h
 
             if (totalHeight >= height) {
@@ -167,17 +184,21 @@ class InfiniteLayoutManager/*(private val orientaion:Int= VERTICAL)*/ : LinearLa
     }
 
     private fun horizontalLayout(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
+
         val fp = findFirstVisibleItemPosition()
         var i = (if (fp == RecyclerView.NO_POSITION) 0 else fp) % itemCount
-        var totalWidth = getChildAt(0)?.left ?: 0
+        val firstChild = getChildAt(0)
+        var totalWidth = if (firstChild == null) paddingStart else getDecoratedLeft(firstChild)
         detachAndScrapAttachedViews(recycler)
+        if (itemCount == 0) return
         while (true) {//**由于是无限滑动，所以这里是填充满
             val itemView = recycler.getViewForPosition(i)
             addView(itemView)
             measureChildWithMargins(itemView, 0, 0)
-            val h = getDecoratedMeasuredHeight(itemView)
-            val w = getDecoratedMeasuredWidth(itemView)
-            layoutDecorated(itemView, totalWidth, 0, totalWidth + w, h)
+            val lp = itemView.layoutParams as ViewGroup.MarginLayoutParams
+            val h = getDecoratedMeasuredHeight(itemView) + lp.topMargin + lp.bottomMargin
+            val w = getDecoratedMeasuredWidth(itemView) + lp.marginStart + lp.marginEnd
+            layoutDecoratedWithMargins(itemView, totalWidth, paddingTop, totalWidth + w, h + paddingTop)
             totalWidth += w
 
             if (totalWidth >= width) {
@@ -187,22 +208,6 @@ class InfiniteLayoutManager/*(private val orientaion:Int= VERTICAL)*/ : LinearLa
             if (i == itemCount) i = 0
         }
     }
-
-    /*override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
-        return PointF(1f,0f)
-    }
-    override fun smoothScrollToPosition(recyclerView: RecyclerView, state: RecyclerView.State?, position: Int) {
-        val scroller=object : LinearSmoothScroller(recyclerView.context){
-            override fun calculateDxToMakeVisible(view: View, snapPreference: Int): Int {
-                val params = view.layoutParams as RecyclerView.LayoutParams
-                val left=this@InfiniteLayoutManager.getDecoratedLeft(view) - params.leftMargin
-                Log.i("logInfo","---->>>>>$left  ${view.left}  ${view.right}  $position")
-                return -left
-            }
-        }
-        scroller.targetPosition=position
-        startSmoothScroll(scroller)
-    }*/
 
 
     override fun canScrollVertically(): Boolean {
