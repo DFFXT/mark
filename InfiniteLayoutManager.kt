@@ -5,15 +5,20 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.pwrd.dls.marble.common.view.getMarginBottom
 import com.pwrd.dls.marble.common.view.getMarginEnd
 import com.pwrd.dls.marble.common.view.getMarginStart
+import com.pwrd.dls.marble.common.view.getMarginTop
 
 /**
  * 使用LayoutManager支持无限滑动
  * 由于没有重载其他重要方法，这个只能靠手滑动，如果调用scrollToPosition等方法会出现奇怪bug
+ * 将infiniteScroll置为false应该可以调用scrollToPosition的方法
  */
 class InfiniteLayoutManager : LinearLayoutManager {
 
+    //**默认无限滚动 false走LinearLayoutManager的逻辑
+    var infiniteScroll = true
 
     //todo 更改回收View的时机和onLayoutChildren的规则可实现预加载item
 
@@ -25,6 +30,9 @@ class InfiniteLayoutManager : LinearLayoutManager {
      * 计算垂直方向滑动的距离
      */
     override fun scrollVerticallyBy(dy: Int, recycler: RecyclerView.Recycler, state: RecyclerView.State): Int {
+        if (!infiniteScroll) {
+            return super.scrollVerticallyBy(dy, recycler, state)
+        }
         val y = fillVertical(dy, recycler, state)
         if (y == 0) return 0
         offsetChildrenVertical(-y)//**应用滑动
@@ -39,6 +47,9 @@ class InfiniteLayoutManager : LinearLayoutManager {
 
 
     override fun scrollHorizontallyBy(dx: Int, recycler: RecyclerView.Recycler, state: RecyclerView.State): Int {
+        if (!infiniteScroll) {
+            return super.scrollHorizontallyBy(dx, recycler, state)
+        }
         val x = fillHorizontal(dx, recycler, state)
         if (x == 0) return 0
         offsetChildrenHorizontal(-x)
@@ -58,8 +69,8 @@ class InfiniteLayoutManager : LinearLayoutManager {
         if (itemCount == 0 || itemCount == 1) return 0
         if (dy > 0) {//up
             val child = getChildAt(childCount - 1) ?: return 0
-            if (getDecoratedBottom(child) - dy < height) {//**需要进行填充
-                var bottom = getDecoratedBottom(child)
+            var bottom = getDecoratedBottom(child) + child.getMarginBottom()
+            if (bottom - dy < height) {//**需要进行填充
                 var p = getPosition(child)
                 while (bottom - dy < height) {//**如果是快速滑动、有可能填充一个View还不够，所以要一直填充知道填充满
                     if (p == itemCount - 1) p = -1
@@ -76,9 +87,9 @@ class InfiniteLayoutManager : LinearLayoutManager {
             }
         } else {//down
             val child = getChildAt(0) ?: return 0
+            var top = getDecoratedTop(child) - child.getMarginTop()
             if (getDecoratedTop(child) - dy > 0) {
                 var p = getPosition(child)
-                var top = getDecoratedTop(child)
                 while (top - dy >= 0) {
                     if (p == 0) p = itemCount
                     p -= 1
@@ -119,9 +130,9 @@ class InfiniteLayoutManager : LinearLayoutManager {
             }
         } else {//right
             val child = getChildAt(0) ?: return 0
-            if (getDecoratedLeft(child) - dx > 0) {
+            var left = getDecoratedLeft(child) - child.getMarginStart()
+            if (left - dx > 0) {
                 var p = getPosition(child)
-                var left = getDecoratedLeft(child) + child.getMarginStart()
                 while (left - dx >= 0) {
                     if (p == 0) p = itemCount
                     p -= 1
