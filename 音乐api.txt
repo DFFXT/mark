@@ -1,5 +1,5 @@
 ¿áÎÒm
-ËÑË÷
+ËÑË÷ 
 http://search.kuwo.cn/r.s?all={keyword}&ft=music&client=kt&cluster=0&pn={page}&rn={pageAccount}&rformat=json&encoding=utf8&r={time}
 http://www.kuwo.cn/api/www/search/searchMusicBykeyWord?key=%E8%90%BD%E9%9B%AA%E7%A5%AD&pn=1&rn=30&reqId=1a51ba20-b375-11e9-b627-031247e03c9f
 
